@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="./index.css">
+</head>
+<body>
+    <div class="container">
+        <div 
+            class="goodsItem"
+            v-for = "(goods,goodsIndex) in goodsList"
+            :key="goods.id"
+        >
+            <h4 class="title">{{goods.title}}:</h4>
+            <ul class="typeItem">
+                <li 
+                    v-for="(type,typeIndex) in goods.typeList"
+                    :class="{
+                        active: typeIndex === goods.index
+                    }"
+                    :key="type"
+                    @click="choose(typeIndex,goods,type,goodsIndex)"
+                >{{type}}</li>
+            </ul>
+        </div>
+        <div class="result">
+            <h4>已选条件：</h4>
+            <span 
+                class="noneCon" 
+                v-if="isShow"
+            >暂时没有选择过滤条件</span>
+            <ul 
+                class="clickShow"
+                v-else
+            >
+                <li 
+                    v-for="(cli,key,clickIndex) in clickData"
+                    @click="deleteItem(key)"
+                >{{cli}} x </li>
+            </ul>
+        </div>
+    </div>
+
+    <script src="./vue.js"></script>
+    <script>
+        const vm = new Vue({
+            el:".container",
+            data:{
+                clickData:{},//利用对象来存储点击的项，从而添加进筛选条件，因为数组的话无论用splice还是$set都会出问题
+                isShow:true,       //利用$set给对应索引上添加值时，如果第一次添加的是索引2上的，那么此时前两位都是undefined，还是会显示对应按钮
+                goodsList: [       //利用splice给对应索引上添加值时，也就是先把原来那个索引上的值删除，再插入一个，但是如果第一次点击的不是第0个条目，是第三个，此时就会使得数组中只有一项，下次再点击第一项，就回吧刚刚的那一项给替换掉，出现混乱，对不上号
+                    {
+                        title: '上装',
+                        typeList: ['全部', '针织衫', '毛呢外套', 'T恤', '羽绒服', '棉衣', '卫衣', '风衣' ],
+                        id: 1,
+                    },
+                    {
+                        title: '裤装',
+                        typeList: ['全部', '牛仔裤', '小脚/铅笔裤', '休闲裤' ,'打底裤', '哈伦裤'],
+                        id: 2,
+                    },
+                    {
+                        title: '裙装',
+                        typeList: ['全部', '连衣裙', '半身裙', '长袖连衣裙', '中长款连衣裙'],
+                        id: 3,
+                    }
+                ]
+            },
+            methods:{
+                choose(index,goods,type,goodsIndex){
+                    if(type==="全部"){//把下面的对应已选条件删除
+                        // console.log(goodsIndex)
+                        this.deleteItem(goodsIndex);
+                        this.$set(goods,"index",0);//改为选中全部选项
+                        return;
+                    }
+                    this.isShow=false;//把没有已选条件的灰色字体消除
+                    this.$set(goods,"index",index); //选中对应选项
+                    // this.$set(this.clickData,index,type);
+                    this.$set(this.clickData,goodsIndex,type)//在已选条件中显示点击选项
+                    // console.log(this.clickData)
+                },
+                deleteItem(index){
+                    this.$delete(this.clickData,index)
+                    // this.isShow=index==this.goodsList[index].index;
+                    this.goodsList[index].index=0;//删除已选条件后上面的对应条目也变为选中全部状态
+                    // this.$set(goods,"index",0);
+                    this.isShow = JSON.stringify(this.clickData)=="{}"//判断已选条件的对象中是否为空，为空就显示默认的没有选中条件的文字
+                }
+            }
+        })
+
+        vm.goodsList.forEach(item => {
+            vm.$set(item,"index",0)//不能直接增删属性，监听不到
+        });
+        // console.log(vm.goodsList);
+
+    </script>
+</body>
+</html>
